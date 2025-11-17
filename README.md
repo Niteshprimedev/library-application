@@ -82,8 +82,8 @@ It supports the following core functionalities:
 
 ```bash
 # Clone repo
-git clone https://github.com/<your-username>/library-book-management.git
-cd library-book-management
+git clone https://github.com/Niteshprimedev/library-application.git
+cd library-application
 
 # Build & run
 mvn clean package
