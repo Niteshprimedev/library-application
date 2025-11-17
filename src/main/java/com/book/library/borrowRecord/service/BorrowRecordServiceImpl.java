@@ -86,6 +86,7 @@ public class BorrowRecordServiceImpl implements BorrowRecordService {
         borrowRecord.setReturnDate(LocalDate.now());
 
         BigDecimal fineAmount = calcFineAmount(borrowRecord);
+
         borrowRecord.setFineAmount(fineAmount);
 
         Book book = borrowRecord.getBook();
