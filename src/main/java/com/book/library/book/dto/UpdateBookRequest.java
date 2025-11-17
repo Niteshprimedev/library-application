@@ -1,20 +1,15 @@
 package com.book.library.book.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.validator.constraints.Range;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UpdateBookRequest {
     private String title;
     private String author;
     private String category;
-    private int totalCopies;
+    private Integer totalCopies;
 }

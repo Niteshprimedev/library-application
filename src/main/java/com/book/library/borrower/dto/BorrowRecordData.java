@@ -1,7 +1,7 @@
 package com.book.library.borrower.dto;
 
+import com.book.library.borrowRecord.dto.BorrowRecordResponse;
 import lombok.*;
-
 import java.util.List;
 
 @Getter
@@ -9,11 +9,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BorrowerData {
-    private List<BorrowerResponse> borrowers;
+public class BorrowRecordData {
+
+    private List<BorrowRecordResponse> records;
     private Integer pageNumber;
     private Integer pageSize;
     private Long totalElements;
     private Integer totalPages;
     private boolean lastPage;
 }
+

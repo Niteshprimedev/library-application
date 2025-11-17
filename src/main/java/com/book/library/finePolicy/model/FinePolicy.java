@@ -3,6 +3,7 @@ package com.book.library.finePolicy.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -11,7 +12,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Builder
 public class FinePolicy {
     @Id
     @GeneratedValue
@@ -21,5 +22,5 @@ public class FinePolicy {
     private String category;
 
     @Column(nullable = false)
-    private double finePerDay;
+    private BigDecimal finePerDay;
 }

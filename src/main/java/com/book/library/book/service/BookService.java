@@ -8,7 +8,7 @@ import com.book.library.book.dto.UpdateBookRequest;
 import java.util.UUID;
 
 public interface BookService {
-    BookData getBooks();
+    BookData getBooks(String category, Boolean available, int page, int size, String sortBy, String sortDir);
     BookResponse addBook(CreateBookRequest createBookRequest);
     BookResponse updateBook(UpdateBookRequest updateBookRequest, UUID id);
     BookResponse removeBook(UUID id);

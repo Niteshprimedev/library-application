@@ -1,25 +1,27 @@
 package com.book.library.book.model;
 
+import com.book.library.borrowRecord.model.BorrowRecord;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "books")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Builder
 public class Book {
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String title;
 
     @Column(nullable = false)
@@ -29,7 +31,7 @@ public class Book {
     private String category;
 
     @Column(nullable = false)
-    private boolean isAvailable = true;
+    private boolean available = true;
 
     @Column(nullable = false)
     private int totalCopies;
@@ -37,11 +39,26 @@ public class Book {
     @Column(nullable = false)
     private int availableCopies;
 
-    public void updateTotalCopies(int newCopies){
+    @JsonIgnore
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<BorrowRecord> borrowRecords = new ArrayList<>();
+
+    public void addTotalCopies(int newCopies){
         this.totalCopies += newCopies;
     }
 
-    public void updateAvailableCopies(int newCopies){
+    public void addAvailableCopies(int newCopies){
         this.availableCopies += newCopies;
+    }
+
+    public void borrowOneCopy() {
+        this.availableCopies--;
+        this.available = this.availableCopies > 0;
+    }
+
+    public void returnOneCopy() {
+        this.availableCopies++;
+        this.available = true;
     }
 }

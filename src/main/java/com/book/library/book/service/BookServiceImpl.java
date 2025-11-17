@@ -7,33 +7,60 @@ import com.book.library.book.dto.UpdateBookRequest;
 import com.book.library.book.model.Book;
 import com.book.library.book.repository.BookRepository;
 import com.book.library.exceptions.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Service
 public class BookServiceImpl implements BookService{
 
     private final BookRepository bookRepository;
     private final ModelMapper modelMapper;
 
-    @Autowired
-    public BookServiceImpl(BookRepository bookRepository, ModelMapper modelMapper){
-        this.bookRepository = bookRepository;
-        this.modelMapper = modelMapper;
-    }
-
     @Override
-    public BookData getBooks() {
-        List<BookResponse> books = bookRepository.findAll().stream()
-                .filter(book -> book.getTotalCopies() > 0)
-                .map(book -> modelMapper.map(book, BookResponse.class)).toList();
+    public BookData getBooks(String category, Boolean available, int page, int size, String sortBy, String sortDir) {
 
-        BookData bookData = new BookData();
-        bookData.setData(books);
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // fetch all paginated books
+        Page<Book> bookPage = bookRepository.findAll(pageable);
+
+        List<Book> booksWithCopies = bookPage.getContent().stream()
+                .filter(book -> book.getTotalCopies() > 0)
+                .toList();
+
+        List<Book> booksWithCategoryFilter  = booksWithCopies.stream()
+                .filter(book -> category == null || book.getCategory().equalsIgnoreCase(category))
+                .toList();
+
+        List<Book> booksWithAvailableFilter = booksWithCategoryFilter.stream()
+                .filter(book -> available == null || book.isAvailable() == available)
+                .toList();
+
+        List<BookResponse> bookResponseList = booksWithAvailableFilter.stream()
+                .map(book -> modelMapper.map(book, BookResponse.class))
+                .toList();
+
+        BookData bookData = BookData.builder()
+            .books(bookResponseList)
+            .pageNumber(bookPage.getNumber())
+            .pageSize(bookPage.getSize())
+            .totalElements(bookPage.getTotalElements())
+            .totalPages(bookPage.getTotalPages())
+            .lastPage(bookPage.isLast())
+            .build();
 
         return bookData;
     }
@@ -43,11 +70,11 @@ public class BookServiceImpl implements BookService{
         Book newBook = modelMapper.map(createBookRequest, Book.class);
         Book existingBook = bookRepository.findByTitleAndAuthor(
                 newBook.getTitle(), newBook.getAuthor()
-        );
+        ).orElse(null);
 
         if(existingBook != null){
-            existingBook.updateTotalCopies(newBook.getTotalCopies());
-            existingBook.updateAvailableCopies(newBook.getTotalCopies());
+            existingBook.addTotalCopies(newBook.getTotalCopies());
+            existingBook.addAvailableCopies(newBook.getTotalCopies());
             existingBook.setAvailable(true);
 
             Book updatedBook = bookRepository.save(existingBook);
@@ -77,9 +104,11 @@ public class BookServiceImpl implements BookService{
             savedBook.setAuthor(updateBookRequest.getAuthor());
         }
 
-        savedBook.updateTotalCopies(updateBookRequest.getTotalCopies());
-        savedBook.updateAvailableCopies(updateBookRequest.getTotalCopies());
-        savedBook.setAvailable(true);
+        if (updateBookRequest.getTotalCopies() != null && updateBookRequest.getTotalCopies() > 0 && updateBookRequest.getTotalCopies() > 0) {
+            savedBook.addTotalCopies(updateBookRequest.getTotalCopies());
+            savedBook.addAvailableCopies(updateBookRequest.getTotalCopies());
+            savedBook.setAvailable(true);
+        }
 
         Book updatedBook = bookRepository.save(savedBook);
         return modelMapper.map(updatedBook, BookResponse.class);

@@ -1,4 +1,4 @@
-INSERT INTO fine_policies (id, category, finePerDay) VALUES
+INSERT INTO fine_policies (id, category, fine_per_day) VALUES
 (RANDOM_UUID(), 'Fiction', 3.0),
 (RANDOM_UUID(), 'Tech', 2.5),
 (RANDOM_UUID(), 'History', 1.5),

@@ -1,26 +1,25 @@
 package com.book.library.borrower.dto;
 
+import com.book.library.borrower.enums.MembershipType;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateBookRequest {
-    @NotBlank(message = "Title cannot be blank")
-    private String title;
+@Builder
+public class CreateBorrowerRequest {
+    @NotBlank(message = "Name cannot be blank")
+    private String name;
 
-    @NotBlank(message = "Author cannot be blank")
-    private String author;
+    @NotBlank(message = "Email cannot be blank")
+    @Email(message = "Invalid email")
+    private String email;
 
-    @NotBlank(message = "Category cannot be blank")
-    private String category;
-
-    @Min(value = 1, message = "Total copies must be at least 1")
-    private int totalCopies;
+    @NotNull(message = "Membership type is required")
+    private MembershipType membershipType;
 }

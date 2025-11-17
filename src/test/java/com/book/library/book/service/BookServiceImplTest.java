@@ -11,16 +11,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class BookServiceImplTest {
+
     private BookRepository bookRepository;
     private ModelMapper modelMapper;
     private BookServiceImpl bookService;
@@ -33,47 +33,72 @@ public class BookServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should add new book when title-author pair doesn't exist")
+    @DisplayName("Should add a completely new book when title-author does not exist")
     void shouldAddNewBook() {
-        CreateBookRequest request = new CreateBookRequest("T1", "A1", "C1", 4);
-        Book mappedBook = modelMapper.map(request, Book.class);
 
-        when(bookRepository.findByTitleAndAuthor(anyString(), anyString())).thenReturn(null);
-        when(bookRepository.save(any(Book.class))).thenAnswer(i -> i.getArgument(0));
+        CreateBookRequest createBookRequest = new CreateBookRequest("T1", "A1", "C1", 4);
 
-        BookResponse response = bookService.addBook(request);
+        when(bookRepository.findByTitleAndAuthor("T1", "A1"))
+                .thenReturn(Optional.empty());
 
-        assertThat(response.getTitle()).isEqualTo("T1");
-        assertThat(response.getTotalCopies()).isEqualTo(4);
+        when(bookRepository.save(any(Book.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        BookResponse bookResponse = bookService.addBook(createBookRequest);
+
+        assertThat(bookResponse.getTitle()).isEqualTo("T1");
+        assertThat(bookResponse.getTotalCopies()).isEqualTo(4);
+        assertThat(bookResponse.getAvailableCopies()).isEqualTo(4);
+        assertThat(bookResponse.isAvailable()).isTrue();
+
         verify(bookRepository, times(1)).save(any(Book.class));
     }
 
     @Test
-    @DisplayName("Should increase total copies if book already exists")
+    @DisplayName("Should increase copies when book already exists")
     void shouldIncreaseCopiesIfBookExists() {
-        CreateBookRequest request = new CreateBookRequest("T2", "A2", "C2", 4);
-        Book existingBook = new Book(UUID.randomUUID(), "T2", "A2", "C2", true, 8, 4);
 
-        when(bookRepository.findByTitleAndAuthor(anyString(), anyString())).thenReturn(existingBook);
-        when(bookRepository.save(any(Book.class))).thenAnswer(i -> i.getArgument(0));
+        CreateBookRequest createBookRequest = new CreateBookRequest("T2", "A2", "C2", 4);
 
-        BookResponse response = bookService.addBook(request);
+        Book existingBook = new Book(
+                UUID.randomUUID(),
+                "T2",
+                "A2",
+                "C2",
+                true,
+                8,
+                3,
+                new ArrayList<>()
+        );
 
-        assertThat(response.getTotalCopies()).isEqualTo(12);
-        assertThat(response.getAvailableCopies()).isEqualTo(8);
+        when(bookRepository.findByTitleAndAuthor("T2", "A2"))
+                .thenReturn(Optional.of(existingBook));
+
+        when(bookRepository.save(any(Book.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        BookResponse bookResponse = bookService.addBook(createBookRequest);
+
+        assertThat(bookResponse.getTotalCopies()).isEqualTo(12);
+        assertThat(bookResponse.getAvailableCopies()).isEqualTo(7);
+        assertThat(bookResponse.isAvailable()).isTrue();
+
         verify(bookRepository, times(1)).save(existingBook);
     }
 
     @Test
-    @DisplayName("Should throw exception when book not found for update")
+    @DisplayName("Should throw ResourceNotFoundException when updating a non-existing book")
     void shouldThrowWhenBookNotFoundForUpdate() {
+
         UUID id = UUID.randomUUID();
-        when(bookRepository.findById(eq(id))).thenReturn(Optional.empty());
 
-        UpdateBookRequest update = new UpdateBookRequest("Title", "Author", "Category", 3);
+        when(bookRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> bookService.updateBook(update, id))
+        UpdateBookRequest updateBookRequest = new UpdateBookRequest("NewT", "NewA", "NewC", 3);
+
+        assertThatThrownBy(() -> bookService.updateBook(updateBookRequest, id))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Book not found");
+                .hasMessageContaining("Book")
+                .hasMessageContaining("id");
     }
 }

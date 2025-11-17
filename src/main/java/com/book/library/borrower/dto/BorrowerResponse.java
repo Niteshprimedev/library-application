@@ -1,5 +1,6 @@
 package com.book.library.borrower.dto;
 
+import com.book.library.borrower.enums.MembershipType;
 import lombok.*;
 
 import java.util.UUID;
@@ -9,14 +10,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BookResponse {
+public class BorrowerResponse {
     private UUID id;
-    private String title;
-    private String author;
-    private String category;
-    private boolean isAvailable;
-    private int totalCopies;
-    private int availableCopies;
+    private String name;
+    private String email;
+    private MembershipType membershipType;
+    private int maxBorrowLimit;
 }
 
 
